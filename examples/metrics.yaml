@@ -117,45 +117,33 @@
   direction: 1
   threshold: 10
 
-- name: max-mutating-apicalls-latency-${ag}
-  metricName.keyword: max-mutating-apicalls-latency
+- name: avg-mutating-apicalls-latency
+  metricName.keyword: avg-mutating-apicalls-latency
   metric_of_interest: value
   agg:
-    agg_type: ${ag}
+    agg_type: avg
   direction: 1
-  fan_out:
-    - ag: avg
-    - ag: max
 
-- name: max-ro-apicalls-latency-${ag}
-  metricName.keyword: max-ro-apicalls-latency
+- name: avg-ro-apicalls-latency
+  metricName.keyword: avg-ro-apicalls-latency
   metric_of_interest: value
   agg:
-    agg_type: ${ag}
+    agg_type: avg
   direction: 1
-  fan_out:
-    - ag: avg
-    - ag: max
 
-- name: 99thEtcdCompaction-${ag}
+- name: 99thEtcdCompaction
   metricName.keyword: 99thEtcdCompaction
   metric_of_interest: value
   agg:
-    agg_type: ${ag}
+    agg_type: avg
   direction: 1
-  fan_out:
-    - ag: sum
-    - ag: max
 
-- name: nodeMajorFaults-${ag}
+- name: nodeMajorFaults
   metricName.keyword: nodeMajorFaults
   metric_of_interest: value
   agg:
-    agg_type: ${ag}
+    agg_type: avg
   direction: 1
-  fan_out:
-    - ag: max
-    - ag: sum
 
 - name: ovnCPU
   metricName.keyword: containerCPU
