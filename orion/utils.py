@@ -81,6 +81,9 @@ class Utils:
             labels = metric.pop("labels", None)
             direction = int(metric.pop("direction", 1))
             threshold = abs(int(metric.pop("threshold", test_threshold)))
+            acceptable_range = metric.pop("acceptable_range", None)
+            if acceptable_range is not None:
+                acceptable_range = self._parse_acceptable_range(acceptable_range)
             ts = metric.pop("timestamp", global_timestamp_field)
             correlation = metric.pop("correlation", "")
             context = metric.pop("context", 5)
@@ -97,7 +100,8 @@ class Utils:
             meta_by_name[metric["name"]] = {
                 "labels": labels, "direction": direction, "threshold": threshold,
                 "correlation": correlation, "context": context, "timestamp": ts,
-                "type": metric_type, "dry_run": dry_run,
+                "type": metric_type, "acceptable_range": acceptable_range,
+                "dry_run": dry_run,
             }
 
             if "agg" in metric:
@@ -141,10 +145,31 @@ class Utils:
         metric["labels"] = meta["labels"]
         metric["direction"] = meta["direction"]
         metric["threshold"] = meta["threshold"]
+        metric["acceptable_range"] = meta["acceptable_range"]
         metric["timestamp"] = meta["timestamp"]
         metric["correlation"] = meta["correlation"]
         metric["context"] = meta["context"]
         metric["dry_run"] = meta["dry_run"]
+
+    @staticmethod
+    def _parse_acceptable_range(value):
+        """Normalize an acceptable range to an inclusive (minimum, maximum) tuple."""
+        if isinstance(value, dict):
+            if set(value) != {"min", "max"}:
+                raise ValueError("acceptable_range must contain exactly 'min' and 'max'")
+            bounds = (value["min"], value["max"])
+        elif isinstance(value, (list, tuple)) and len(value) == 2:
+            bounds = tuple(value)
+        else:
+            raise ValueError("acceptable_range must be [min, max] or {min: ..., max: ...}")
+
+        try:
+            minimum, maximum = (float(bound) for bound in bounds)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("acceptable_range bounds must be numeric") from exc
+        if minimum > maximum:
+            raise ValueError("acceptable_range minimum must not exceed maximum")
+        return minimum, maximum
 
     @staticmethod
     def _group_by_timestamp(metrics, meta_by_name):

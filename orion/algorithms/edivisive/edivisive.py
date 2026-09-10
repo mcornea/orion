@@ -52,9 +52,9 @@ class EDivisive(Algorithm):
             is_dry_run = self.metrics_config[metric].get("dry_run", False)
             for i in range(len(changepoint_list)-1, -1, -1):
                 deleted = False
-                if (self._has_changepoint(metric, changepoint_list, i) or
+                if (self._is_irrelevant_changepoint(metric, changepoint_list, i) or
                     (not is_dry_run and self._is_acked(ackSet, metric, changepoint_list, i)) or
-                    self._is_under_threshold(metric, changepoint_list, i)):
+                    self._is_filtered_by_threshold(metric, changepoint_list, i)):
                     deleted=True
                     del changepoint_list[i]
                 if (not deleted and self.metrics_config[metric]["correlation"] != ""):
@@ -79,9 +79,11 @@ class EDivisive(Algorithm):
         changepoint_list = change_points_by_metric[depending_metric]
         for i in range(len(changepoint_list)-1, -1, -1):
             if (changepoint_list[i].index >= index-context) and (changepoint_list[i].index <= index+context):
-                if (self._has_changepoint(depending_metric, changepoint_list, i) or
-                    self._is_acked(ackSet, depending_metric, changepoint_list, i) or
-                    self._is_under_threshold(depending_metric, changepoint_list, i)):
+                if (
+                    self._is_irrelevant_changepoint(depending_metric, changepoint_list, i)
+                    or self._is_acked(ackSet, depending_metric, changepoint_list, i)
+                    or self._is_filtered_by_threshold(depending_metric, changepoint_list, i)
+                ):
                     return False
                 return True
         return False
@@ -89,6 +91,19 @@ class EDivisive(Algorithm):
 
     def _is_under_threshold(self, metric, changepoint_list, i):
         return self.metrics_config[metric]["threshold"] > abs((changepoint_list[i].stats.mean_1 - changepoint_list[i].stats.mean_2)/changepoint_list[i].stats.mean_1)*100
+
+    def _is_irrelevant_changepoint(self, metric, changepoint_list, i):
+        """Filter changes that do not cross an acceptable range boundary."""
+        if self._has_acceptable_range(metric):
+            return not self._steps_outside_acceptable_range(metric, changepoint_list[i])
+        return self._has_changepoint(metric, changepoint_list, i)
+
+    def _is_filtered_by_threshold(self, metric, changepoint_list, i):
+        """Apply the percentage threshold only when no value range is configured."""
+        return (
+            not self._has_acceptable_range(metric)
+            and self._is_under_threshold(metric, changepoint_list, i)
+        )
 
 
     def _is_acked(self, ackSet, metric, changepoint_list, i):

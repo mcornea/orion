@@ -46,7 +46,12 @@ class CMR(Algorithm):
 
         for metric, cps in change_points_by_metric.items():
             direction = self.metrics_config[metric]["direction"]
-            if direction != 0:
+            if self._has_acceptable_range(metric):
+                change_points_by_metric[metric] = [
+                    cp for cp in cps
+                    if self._steps_outside_acceptable_range(metric, cp)
+                ]
+            elif direction != 0:
                 filtered = []
                 for cp in cps:
                     delta = cp.stats.mean_2 - cp.stats.mean_1

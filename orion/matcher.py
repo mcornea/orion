@@ -735,7 +735,7 @@ class Matcher:
         reserved_keys = {
             "name", "metric_of_interest", "not", "agg", "type",
             "labels", "direction", "threshold", "timestamp",
-            "correlation", "context",
+            "correlation", "context", "acceptable_range",
         }
 
         must_clauses = [Q("terms", **{self.uuid_field + ".keyword": uuids})]
