@@ -75,14 +75,15 @@ class Algorithm(ABC): # pylint: disable = too-many-arguments, too-many-instance-
         return self.metrics_config[metric].get("acceptable_range") is not None
 
     def _steps_outside_acceptable_range(self, metric, change_point):
-        """Return whether a change moves from inside the range to outside it."""
+        """Return whether the actual value at a changepoint is outside its range."""
         acceptable_range = self.metrics_config[metric].get("acceptable_range")
         if acceptable_range is None:
             return False
 
         minimum, maximum = acceptable_range
-        before = change_point.stats.mean_1
-        after = change_point.stats.mean_2
-        was_inside = minimum <= before <= maximum
-        is_outside = after < minimum or after > maximum
-        return was_inside and is_outside
+        index = change_point.index
+        if not 0 <= index < len(self.dataframe):
+            return False
+
+        value = self.dataframe.iloc[index][metric]
+        return value < minimum or value > maximum
