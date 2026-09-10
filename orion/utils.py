@@ -6,6 +6,7 @@ module for all utility functions orion uses
 # pylint: disable = import-error
 
 import json
+import math
 import re
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -167,6 +168,8 @@ class Utils:
             minimum, maximum = (float(bound) for bound in bounds)
         except (TypeError, ValueError) as exc:
             raise ValueError("acceptable_range bounds must be numeric") from exc
+        if not math.isfinite(minimum) or not math.isfinite(maximum):
+            raise ValueError("acceptable_range bounds must be finite")
         if minimum > maximum:
             raise ValueError("acceptable_range minimum must not exceed maximum")
         return minimum, maximum
